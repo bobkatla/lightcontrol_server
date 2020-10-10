@@ -21,6 +21,7 @@ const monConnOnline = mongoose.createConnection(
 const onlModel = monConnOnline.model('Light', new mongoose.Schema({
     id: Number,
     name: String,
+    area: String,
     state: Boolean
 }));
 
@@ -28,7 +29,7 @@ app.get('/', (req, res) => {res.json('it is working');});
 
 // for admin work of adding new light
 app.post('/add', (req, res) => {
-    const {id, name} = req.body;
+    const {id, name, area} = req.body;
 
     onlModel.find({id}, (err, docs) => {
       if(err) {
@@ -38,6 +39,7 @@ app.post('/add', (req, res) => {
           const newLight = new onlModel({
               id,
               name,
+              area,
               state: false
           });
       
@@ -97,7 +99,8 @@ app.put('/switch', (req, res) => {
             docs[0].state = !docs[0].state;
             onlModel.updateOne({id}, {state: docs[0].state})
             .then(() => {
-                const topic = `/lightchange/${id}`;
+                const topic = `/lightchange/${docs[0].area}/${id}`;
+                console.log(topic);
                 client.publish(topic, docs[0].state.toString(), () => console.log("published"));
                 res.status(200).json("switched the light ok");
             });
